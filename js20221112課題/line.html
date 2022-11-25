@@ -1,0 +1,216 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <link rel="stylesheet" href="css/style.css">
+
+    </head>
+    <body>
+        <h1>
+            Firebase chat
+            <button id="login">Login</button>
+            <button  id="logout"class="hidden"  >Logout</button>
+        </h1>
+    <div id="inputform" class="hidden">    
+            Uid:<input type="text" class="logname" id="uname">
+        <div>
+            <!-- メッセージ入力欄 -->
+            <textarea id="text" rows="1" cols="50"></textarea>
+            <div class="emo">
+            <button id ="emoji">&#128512;</button>
+            </div>
+            <!-- 送信ボタン -->
+            <button id="send">送信</button>
+        </div>
+    </div>
+        <!-- リスト表示 -->
+        <div id="output" style="overflow:auto;height:300px,"></div>
+
+
+    <!-- JQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- JQuery -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+    </script>
+        <script type="module">
+    import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved } 
+    from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js";
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+        import {
+            getAuth,
+            signInWithPopup,
+            GoogleAuthProvider,
+            signOut,
+            onAuthStateChanged,
+        } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
+        const firebaseConfig = {
+        apiKey: "AIzaSyDcgMzP9pxVnQXI21YoL2wXH2ufZtFiVJk",
+        authDomain: "kadailineapp.firebaseapp.com",
+        databaseURL: "https://kadailineapp-default-rtdb.firebaseio.com",
+        projectId: "kadailineapp",
+        storageBucket: "kadailineapp.appspot.com",
+        messagingSenderId: "921123480674",
+        appId: "1:921123480674:web:df229369388a49c3435d3b"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+
+        
+
+    // let newPostRef =firebase.database().ref();
+    const db = getDatabase(app);  //Realtime databaseに接続
+    const dbRef = ref(db,"users/")  ; //RealtimeDB内の”Chat”を使う
+    const provider = new GoogleAuthProvider();
+    provider.addScope("https://www.googleapis.com/auth/contacts.readonly");
+    const auth = getAuth();
+    const login =$("#login");
+    const logout =$("#logout");
+    const inputform =$("#inputform");
+
+    $("#emoji").on("click",function (){
+              $("#text").text("&#128512;");
+             });
+
+    login.on('click',function () {
+        signInWithPopup(auth, provider)
+        .then((result) => {
+            console.log("ログイン成功");
+            $("#login").addClass('hidden');
+            [logout, inputform].forEach(el => {
+            el.removeClass('hidden');
+            })
+            $(".text").focus();
+            
+            return;
+        }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        const email = error.email;
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        alert("ログイン失敗");
+        // ...
+        });
+        });
+
+    logout.on('click',function () {
+        signOut(auth).then(()=>{
+            // sign ouf successful.
+            console.log("ログアウト");
+            $("#login").removeClass('hidden');
+            [logout, inputform].forEach(el => {
+            el.addClass('hidden');
+            })  
+        }).catch(()=>{
+            console.error(error)
+      })
+    });
+
+    
+// 送信処理
+    onAuthStateChanged(auth,(user)=>{
+        if(user){
+            const uid =user.uid;
+            // ユーザー情報を取得できます
+        if(user !== null){
+            user.providerData.forEach((profile)=>   {
+                $(".logname").val(uid.substr(0, 8));
+                // console.log(uid);
+                // console.log("Sign-in provider:" + profile.providerId);
+                // console.log("Provider-specific Uid:" + profile.uid);
+                // console.log("Email:" + profile.email);
+        })}
+            $("#text").on("keydown",function(e){
+                if(e.keyCode == 13 && $("#text").val() !='' ){
+                const uname = $("#uname").val();
+                    const text  = $("#text").val();
+                    const msg ={
+                        uname : uname,
+                        text : text,
+                    }
+                    const dbRef = ref(db,"users")
+                    const newPostRef = push(dbRef)
+                    set (newPostRef,msg);
+                $("#text").val("");
+                $("#text").focus();
+                    }   
+                
+              
+            
+         
+       
+            $("#send").on("click",function(){
+                if($("#text").val() !='' ){
+                    const uname = $("#uname").val();
+                    const text  = $("#text").val();
+                    const msg ={
+                        uname : uname,
+                        text : text,
+                    }
+                    const dbRef = ref(db,"users")
+                    const newPostRef = push(dbRef)
+                    set (newPostRef,msg);
+                $("#text").val("");
+                $("#text").focus();
+                }
+              })
+        });
+    }});
+    
+    
+    
+    // データ受信がここから始まる
+    onChildAdded(dbRef,function(data){ //dataと入れるとデータが入るというFirebaseの使用
+    if(data,text!= ''){
+    console.log(data)
+    const msg = data.val();
+    console.log(msg,"取得したデータの塊")
+    const key =data.key;
+    console.log(key,"データの塊にアクセス")
+    // ここから時間を取得
+    let date = new Date();
+        var ye = date.getFullYear();
+        var mo = ("0" + (date.getMonth()+1)).slice(-2);
+        var da = ("0" + date.getDate()).slice(-2);
+        var ho = ("0" + date.getHours()).slice(-2);
+        var mi = ("0" + date.getMinutes()).slice(-2); 
+        // ローカルに入れた値を取得する
+        date = ye +"年" + mo  + "月" + da + "日" + ho +"時" + mi+ "分";
+
+    // テンプレートリテラル<
+    let h =`
+    <div class="msg">
+        <p class="user">${msg.uname}</p>
+        <p class="message">${msg.text}</p>
+        <button id="delete" name="${key}">削除</button>
+        <div class="date">${date}</div>
+    </div>
+    `
+    // appen()のqueryのおまじない
+    $("#output").append(h); 
+        }
+      })
+
+
+    // #deleteを押したらdbからデータを削除！
+    $(document).on("click", "#delete", function () {;
+        // buttonのnameを取得してdbのリファレンスを削除します。
+        let target = $(this).attr("name");
+            console.log(target);
+            remove(ref(db, "users/" + target));
+
+            // 画面を更新して反映させます。
+            location.reload();
+            
+        });
+
+    </script>
+
+    </body>
+    </html>

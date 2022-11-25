@@ -1,0 +1,45 @@
+body {
+background-color: rgb(57, 255, 47);
+}
+
+.date {
+    font-size: 1px;
+    color: gray;
+}
+
+h1 > button {
+    float: right;
+}
+
+.hidden {
+    display: none;
+}
+
+.msg {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  
+  .msg li {
+    display: flex;
+  }
+  
+  .msg li + li {
+    margin-top: 32px;
+  }
+.user {
+ font-size: 10px;
+ font: bold;
+ background-color: beige;
+ width: 100px;
+ text-align: center;
+
+}
+.message {
+    background: white;
+    border-radius: 8px;
+    padding: 16px 24px;
+    max-width: 60%;
+    line-height: 1.8;
+}
